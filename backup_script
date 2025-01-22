@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# Optimized Backup Script: Automates the backup of user-specified directories with compression, logging, and error handling.
+# Backup Script: Automates the backup of user-specified directories with compression, logging, and error handling.
 
 # Variables
-BACKUP_DIR="$HOME/backups"                # Default backup storage directory
-LOG_FILE="$BACKUP_DIR/backup.log"         # Log file path
-COMPRESSION="xz"                          # Compression algorithm (xz for better compression ratio)
-SKIP_CHECKS="${SKIP_CHECKS:-false}"       # Optional flag to skip directory checks
+BACKUP_DIR="$HOME/backups" # Default backup storage directory
+LOG_FILE="$BACKUP_DIR/backup.log" # Log file path
 
 # Function to log messages
 log_message() {
@@ -25,36 +23,22 @@ setup_backup_dir() {
 # Function to perform the backup
 perform_backup() {
     local src_dir="$1"
+    local folder_name=$(basename "$src_dir")  # Extract the folder name from the source directory
     local timestamp=$(date '+%Y%m%d_%H%M%S')
-    local folder_name=$(basename "$src_dir")
-    local backup_file="$BACKUP_DIR/${folder_name}_${timestamp}.tar.$COMPRESSION"
+    local backup_file="$BACKUP_DIR/${folder_name}_${timestamp}.tar.gz"  # Use folder name and timestamp for filename
 
-    # Check if the source directory exists unless skipping checks
-    if [[ ! -d "$src_dir" && "$SKIP_CHECKS" != "true" ]]; then
+    if [[ ! -d "$src_dir" ]]; then
         log_message "ERROR: Source directory $src_dir does not exist."
         return 1
     fi
 
     log_message "Starting backup for directory: $src_dir"
 
-    # Create compressed archive based on the selected compression type
-    case "$COMPRESSION" in
-        "gz")
-            tar -czvf "$backup_file" -C "$(dirname "$src_dir")" "$(basename "$src_dir")" > /dev/null
-            ;;
-        "xz")
-            tar -caf "$backup_file" -C "$(dirname "$src_dir")" "$(basename "$src_dir")" > /dev/null
-            ;;
-        *)
-            log_message "ERROR: Unsupported compression type: $COMPRESSION"
-            return 1
-            ;;
-    esac
-
-    # Check if the tar command was successful
+    # Create compressed archive
+    tar -czvf "$backup_file" -C "$(dirname "$src_dir")" "$(basename "$src_dir")"
     if [[ $? -eq 0 ]]; then
-        local backup_size=$(stat --format="%s" "$backup_file")
-        log_message "Backup successful: $backup_file (Size: $backup_size bytes)"
+        local backup_size=$(du -h "$backup_file" | awk '{print $1}')
+        log_message "Backup successful: $backup_file (Size: $backup_size)"
     else
         log_message "ERROR: Failed to create backup for $src_dir"
         return 1
@@ -65,10 +49,8 @@ perform_backup() {
 echo "Backup Script"
 read -p "Enter the directory to backup: " SOURCE_DIR
 
-# Setup backup directory
 setup_backup_dir
 
-# Perform the backup
 perform_backup "$SOURCE_DIR"
 if [[ $? -ne 0 ]]; then
     log_message "Backup process encountered errors."
