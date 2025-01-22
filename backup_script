@@ -1,3 +1,8 @@
+
+tar -tzvf ~/backups/backup_20250121_123456.tar.gz
+
+
+
 #!/bin/bash
 
 # Backup Script: Automates the backup of user-specified directories with compression, logging, and error handling.
