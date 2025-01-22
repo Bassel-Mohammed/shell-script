@@ -24,7 +24,7 @@ setup_backup_dir() {
 perform_backup() {
     local src_dir="$1"
     local timestamp=$(date '+%Y%m%d_%H%M%S')
-    local backup_file="$BACKUP_DIR/backup_${timestamp}.tar.gz"
+     local backup_file="$BACKUP_DIR/${folder_name}_${timestamp}.tar.gz"
 
     if [[ ! -d "$src_dir" ]]; then
         log_message "ERROR: Source directory $src_dir does not exist."
