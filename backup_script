@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Backup Script: Automates the backup of user-specified directories with compression, logging, and error handling.
+
+# Variables
+BACKUP_DIR="$HOME/backups" # Default backup storage directory
+LOG_FILE="$BACKUP_DIR/backup.log" # Log file path
+
+# Function to log messages
+log_message() {
+    local message="$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
+}
+
+# Function to create the backup directory if it doesn't exist
+setup_backup_dir() {
+    if [[ ! -d "$BACKUP_DIR" ]]; then
+        mkdir -p "$BACKUP_DIR"
+        log_message "Backup directory created at $BACKUP_DIR"
+    fi
+}
+
+# Function to perform the backup
+perform_backup() {
+    local src_dir="$1"
+    local timestamp=$(date '+%Y%m%d_%H%M%S')
+    local backup_file="$BACKUP_DIR/backup_${timestamp}.tar.gz"
+
+    if [[ ! -d "$src_dir" ]]; then
+        log_message "ERROR: Source directory $src_dir does not exist."
+        return 1
+    fi
+
+    log_message "Starting backup for directory: $src_dir"
+
+    # Create compressed archive
+    tar -czf "$backup_file" "$src_dir" 2>>"$LOG_FILE"
+    if [[ $? -eq 0 ]]; then
+        local backup_size=$(du -h "$backup_file" | awk '{print $1}')
+        log_message "Backup successful: $backup_file (Size: $backup_size)"
+    else
+        log_message "ERROR: Failed to create backup for $src_dir"
+        return 1
+    fi
+}
+
+# Main Script Execution
+echo "Backup Script"
+read -p "Enter the directory to backup: " SOURCE_DIR
+
+setup_backup_dir
+
+perform_backup "$SOURCE_DIR"
+if [[ $? -ne 0 ]]; then
+    log_message "Backup process encountered errors."
+    exit 1
+fi
+
+log_message "Backup process completed successfully."
