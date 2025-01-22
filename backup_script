@@ -1,7 +1,3 @@
-
-
-
-
 #!/bin/bash
 
 # Backup Script: Automates the backup of user-specified directories with compression, logging, and error handling.
@@ -38,7 +34,7 @@ perform_backup() {
     log_message "Starting backup for directory: $src_dir"
 
     # Create compressed archive
-   tar -czvf "$BACKUP_FILE" -C "$(dirname "$SOURCE_DIR")" "$(basename "$SOURCE_DIR")"
+    tar -czvf "$backup_file" -C "$(dirname "$src_dir")" "$(basename "$src_dir")"
     if [[ $? -eq 0 ]]; then
         local backup_size=$(du -h "$backup_file" | awk '{print $1}')
         log_message "Backup successful: $backup_file (Size: $backup_size)"
