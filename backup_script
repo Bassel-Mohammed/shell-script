@@ -11,7 +11,7 @@ SKIP_CHECKS="${SKIP_CHECKS:-false}"       # Optional flag to skip directory chec
 # Function to log messages
 log_message() {
     local message="$1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
 }
 
 # Function to create the backup directory if it doesn't exist
@@ -29,7 +29,7 @@ perform_backup() {
     local folder_name=$(basename "$src_dir")
     local backup_file="$BACKUP_DIR/${folder_name}_${timestamp}.tar.$COMPRESSION"
 
-    # Skip source directory existence check if flag is set
+    # Check if the source directory exists unless skipping checks
     if [[ ! -d "$src_dir" && "$SKIP_CHECKS" != "true" ]]; then
         log_message "ERROR: Source directory $src_dir does not exist."
         return 1
@@ -37,7 +37,7 @@ perform_backup() {
 
     log_message "Starting backup for directory: $src_dir"
 
-    # Create compressed archive
+    # Create compressed archive based on the selected compression type
     case "$COMPRESSION" in
         "gz")
             tar -czvf "$backup_file" -C "$(dirname "$src_dir")" "$(basename "$src_dir")" > /dev/null
@@ -51,6 +51,7 @@ perform_backup() {
             ;;
     esac
 
+    # Check if the tar command was successful
     if [[ $? -eq 0 ]]; then
         local backup_size=$(stat --format="%s" "$backup_file")
         log_message "Backup successful: $backup_file (Size: $backup_size bytes)"
